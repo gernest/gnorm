@@ -107,28 +107,20 @@ Shows the build date and commit hash used to build this binary.`[1:],
 }
 
 func initCmd(env environ.Values) *cobra.Command {
-	return &cobra.Command{
+	var root string
+	wd, _ := os.Getwd()
+	i := &cobra.Command{
 		Use:   "init",
 		Short: "Generates the files needed to run GNORM.",
 		Long: `
 Creates a default gnorm.toml and the various template files needed to run GNORM.`[1:],
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := createFile("gnorm.toml", sample); err != nil {
-				fmt.Fprintf(env.Stdout, "Can't create gnorm.toml file: %v\n", err)
-				return codeErr{err, 1}
-			}
-			for _, name := range []string{"table", "schema", "enum"} {
-				if err := createFile(name+".gotmpl", "{{.Name}}"); err != nil {
-					return codeErr{
-						errors.WithMessage(err, fmt.Sprintf("Can't create template file %q", name)),
-						1,
-					}
-				}
-			}
-			return nil
+			return run.Initialize(env, root)
 		},
-		Args: cobra.ExactArgs(0),
+		Args: cobra.ExactArgs(1),
 	}
+	i.Flags().StringVarP(&root, "dir", "c", wd, "base path to generate files to")
+	return i
 }
 
 func docCmd(env environ.Values) *cobra.Command {
